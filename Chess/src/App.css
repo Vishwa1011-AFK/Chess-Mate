@@ -1,0 +1,40 @@
+h1{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chessboard-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.chessboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 20px; /* Add space between the chessboard and captured pieces */
+}
+
+.captured-pieces {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+}
+
+.captured-pieces-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.captured-pieces-list span {
+  font-size: 24px; /* Adjust size for captured piece symbols */
+  margin: 5px;
+}
