@@ -1,76 +1,101 @@
-/* Overall layout */
-.chessboard-wrapper {
-  display: flex;
-  align-items: center; /* Center vertically */
-  justify-content: center; /* Center horizontally */
-  height: 100vh; /* Full viewport height */
-}
-
-/* The chessboard container itself */
-.chessboard-container {
-  margin: 20px; /* Space around the chessboard */
-}
-
-/* Sidebar for captured pieces */
-.captured-pieces-sidebar {
-  display: flex;
-  flex-direction: column; /* Stack pieces vertically */
-  align-items: center; /* Center items horizontally */
-  background-color: #f0f0f0; /* Light gray background */
-  border-radius: 8px; /* Rounded corners */
-  padding: 10px; /* Padding inside the sidebar */
-  margin-right: 20px; /* Space between sidebar and board */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-  width: 120px; /* Fixed width */
-}
-
-/* Title of captured pieces section */
-.captured-pieces-title {
-  font-size: 18px; /* Title size */
-  font-weight: bold; /* Bold title */
-  margin-bottom: 10px; /* Space below title */
-}
-
-/* Captured pieces container */
-.captured-pieces {
-  display: flex;
-  flex-direction: row; /* Keep pieces in a row */
-  flex-wrap: wrap; /* Allow wrapping if needed */
-  justify-content: center; /* Center pieces */
-  align-items: center; /* Center pieces vertically */
-}
-
-/* Individual captured piece */
-.captured-piece {
-  width: 30px; /* Size of each captured piece */
-  height: 30px;
-  margin: 2px; /* Space between pieces */
-}
-
-.captured-piece + .captured-piece {
-  margin-left: 5px; /* Space between captured pieces */
-}
-
-/* For the user tile (player info and timer) */
-.user-tile {
+.chess-game-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px;
+  padding: 20px;
+  gap: 20px;
+  background-color: #f0f0f0;
+  min-height: 100vh;
 }
 
-.user-name {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.user-captured {
+.status-bar {
   display: flex;
-  margin-bottom: 10px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
 }
 
-.user-timer {
+.game-status {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+}
+
+.game-code {
+  font-family: monospace;
+  background: #e0e0e0;
+  padding: 5px 10px;
+  border-radius: 4px;
+  color: #333;
+}
+
+.game-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.game-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.control-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background: #4a90e2;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
   font-size: 16px;
-  color: red;
+}
+
+.control-button:hover {
+  background: #357abd;
+}
+
+.join-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.join-dialog input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  text-transform: uppercase;
+}
+
+.join-dialog button {
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  background: #4a90e2;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.join-dialog button:last-child {
+  background: #e0e0e0;
+  color: #333;
 }

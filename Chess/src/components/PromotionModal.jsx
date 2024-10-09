@@ -1,22 +1,20 @@
 import React from 'react';
-import './PromotionModal.css'; // Ensure you style your modal appropriately
+import './PromotionModal.css';
 
-const PromotionModal = ({ onClose, onPromote }) => {
-  const handlePromotion = (piece) => {
-    onPromote(piece); // Call the promotion handler with the selected piece
-  };
+const PromotionModal = ({ onClose, onPromotion, color }) => {
+  const pieces = ['q', 'r', 'b', 'n'];
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h2>Promote Pawn</h2>
+    <div className="promotion-modal">
+      <div className="promotion-content">
+        <h2>Choose Promotion</h2>
         <div className="promotion-options">
-          <button onClick={() => handlePromotion('q')}>Queen</button>
-          <button onClick={() => handlePromotion('r')}>Rook</button>
-          <button onClick={() => handlePromotion('b')}>Bishop</button>
-          <button onClick={() => handlePromotion('n')}>Knight</button>
+          {pieces.map((piece) => (
+            <button key={piece} onClick={() => onPromotion(piece)}>
+              {String.fromCharCode(9812 + pieces.indexOf(piece) + (color === 'b' ? 6 : 0))}
+            </button>
+          ))}
         </div>
-        <button onClick={onClose} className="close-button">Close</button>
       </div>
     </div>
   );

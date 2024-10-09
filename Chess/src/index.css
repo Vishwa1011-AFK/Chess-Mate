@@ -1,12 +1,48 @@
-html, body, #root {
+* {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  height: 100%;
-  width: 100%;
+  font-family: Arial, sans-serif;
+}
+img{
+  max-width: 20%;
+}
+button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
 }
 
-body {
+button:hover {
+  background-color: #45a049;
+}
+
+input {
+  padding: 10px;
+  margin: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.chess-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  margin-top: 20px;
+}
+
+.user-tile-wrapper {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 20px;
 }

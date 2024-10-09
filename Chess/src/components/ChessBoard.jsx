@@ -1,224 +1,262 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import Chessboard from "chessboardjsx";
 import { Chess } from "chess.js";
-import soundManager from '../utils/SoundManager';
-import soundSelfMove from '../assets/sounds/self-move.mp3';
-import soundCapture from '../assets/sounds/capture.mp3';
-import soundCastling from '../assets/sounds/castling.mp3';
-import soundMoveCheck from '../assets/sounds/move-check.mp3';
-import soundPromotion from '../assets/sounds/promotion.mp3';
+import io from "socket.io-client";
+import UserTile from "./UserTile";
+import PromotionModal from "./PromotionModal";
+import soundManager, { playMoveSound } from "../utils/SoundManager";
 import './ChessBoard.css';
-import PromotionModal from './PromotionModal';
-import CapturedPieces from './CapturedPieces';
 
-const sounds = [
-  { name: "selfMove", file: soundSelfMove },
-  { name: "capture", file: soundCapture },
-  { name: "castling", file: soundCastling },
-  { name: "moveCheck", file: soundMoveCheck },
-  { name: "promotion", file: soundPromotion },
-];
-
-// Helper function to format time in MM:SS
-const formatTime = (timeInSeconds) => {
-  const minutes = Math.floor(timeInSeconds / 60);
-  const seconds = timeInSeconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-};
-
-const UserTile = ({ name, timeLeft, capturedPieces, side }) => {
-  return (
-    <div className={`user-tile ${side}`}>
-      <div className="user-name">{name}</div>
-      <div className="user-captured">
-        <CapturedPieces capturedPieces={capturedPieces} side={side} />
-      </div>
-      <div className="user-timer">{formatTime(timeLeft)}</div> {/* Format time here */}
-    </div>
-  );
-};
+const SOCKET_SERVER_URL = "http://localhost:3001";
+const INITIAL_TIME = 10 * 60; // 10 minutes in seconds
 
 const ChessBoardComponent = () => {
   const [game, setGame] = useState(new Chess());
   const [fen, setFen] = useState("start");
-  const [promotionPiece, setPromotionPiece] = useState(null);
-  const [isPromotionModalOpen, setPromotionModalOpen] = useState(false);
-  const [selectedSquare, setSelectedSquare] = useState(null);
-  const [highlightedSquares, setHighlightedSquares] = useState([]);
+  const [gameCode, setGameCode] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const [playerColor, setPlayerColor] = useState(null);
+  const [opponentName, setOpponentName] = useState("Opponent");
+  const [status, setStatus] = useState("Waiting for game");
+  const [turn, setTurn] = useState("w");
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
   const [capturedPieces, setCapturedPieces] = useState({ w: [], b: [] });
-  const [timerWhite, setTimerWhite] = useState(600); // 10 minutes in seconds
-  const [timerBlack, setTimerBlack] = useState(600);
-  const [turn, setTurn] = useState("w"); // Track whose turn it is
+  const [whiteTime, setWhiteTime] = useState(INITIAL_TIME);
+  const [blackTime, setBlackTime] = useState(INITIAL_TIME);
+  const [showPromotionModal, setShowPromotionModal] = useState(false);
+  const [pendingMove, setPendingMove] = useState(null);
+  const timerRef = useRef(null);
 
   useEffect(() => {
-    soundManager.preloadSounds(sounds);
+    const newSocket = io(SOCKET_SERVER_URL, {
+      withCredentials: true,
+      transports: ['websocket']
+    });
+    
+    setSocket(newSocket);
 
-    const interval = setInterval(() => {
-      if (!game.isGameOver()) {
-        if (turn === "w") {
-          setTimerWhite((prev) => Math.max(prev - 1, 0));
-        } else {
-          setTimerBlack((prev) => Math.max(prev - 1, 0));
-        }
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [turn, game]);
-
-  const isGameOver = useCallback((chessInstance) => {
-    return chessInstance.isGameOver() || chessInstance.isDraw() || chessInstance.isCheckmate();
-  }, []);
-
-  const playMoveSound = (move) => {
-    if (move.captured) {
-      soundManager.playSound("capture");
-    } else {
-      soundManager.playSound("selfMove");
-    }
-
-    if (move.flags.includes('k')) {
-      soundManager.playSound("castling");
-    }
-
-    if (game.inCheck()) {
-      soundManager.playSound("moveCheck");
-    }
-  };
-
-  // Fix captured pieces logic here
-  const updateCapturedPieces = (move) => {
-    if (move.captured) {
-      setCapturedPieces((prev) => {
-        const capturingSide = move.color === 'w' ? 'w' : 'b'; // Corrected logic: 'w' captures add to 'w' and 'b' captures add to 'b'
-        const capturedPiece = move.color === 'w' ? move.captured.toLowerCase() : move.captured.toUpperCase(); // Captured piece should be added in correct case
-        return {
-          ...prev,
-          [capturingSide]: [...prev[capturingSide], capturedPiece],
-        };
-      });
-    }
-  };
-
-  const handleMove = useCallback((newMove) => {
-    if (newMove) {
-      playMoveSound(newMove);
-      updateCapturedPieces(newMove);
-      setFen(game.fen());
-      setGame(new Chess(game.fen()));
-      setTurn(turn === "w" ? "b" : "w");
-
-      if (isGameOver(game)) {
-        alert("Game Over");
-      }
-    }
-  }, [game, turn, isGameOver]);
-
-  const handleDrop = useCallback(({ sourceSquare, targetSquare }) => {
-    const moves = game.moves({ square: sourceSquare, verbose: true });
-
-    if (!moves.some((legalMove) => legalMove.to === targetSquare)) {
-      console.log("Invalid move:", { from: sourceSquare, to: targetSquare });
-      return false;
-    }
-
-    const newMove = game.move({
-      from: sourceSquare,
-      to: targetSquare,
+    newSocket.on("connect", () => {
+      console.log("Connected to server");
     });
 
-    if (newMove) {
-      if (newMove.flags.includes('p')) {
-        setPromotionPiece({ from: sourceSquare, to: targetSquare });
-        setPromotionModalOpen(true);
-        return;
-      }
+    newSocket.on("gameCreated", ({ gameCode, color, fen }) => {
+      console.log("Game created:", gameCode);
+      setGameCode(gameCode);
+      setPlayerColor(color);
+      updateGameState(fen);
+      setStatus(`Game created. Share code: ${gameCode}`);
+    });
 
-      handleMove(newMove);
-    }
+    newSocket.on("gameJoined", ({ gameCode, color, fen }) => {
+      console.log("Game joined:", gameCode);
+      setGameCode(gameCode);
+      setPlayerColor(color);
+      updateGameState(fen);
+      setStatus(`Game started - You are ${color === 'w' ? 'White' : 'Black'}`);
+      startTimer();
+    });
 
-    setHighlightedSquares([]);
-    setSelectedSquare(null);
-    return true;
-  }, [game, handleMove]);
+    newSocket.on("opponentJoined", ({ color, fen }) => {
+      console.log("Opponent joined");
+      updateGameState(fen);
+      setStatus(`Game started - You are ${playerColor === 'w' ? 'White' : 'Black'}`);
+      startTimer();
+    });
 
-  const handleSquareClick = useCallback((square) => {
-    if (!selectedSquare) {
-      const piece = game.get(square);
-      if (piece) {
-        const moves = game.moves({ square, verbose: true });
-        const legalMoves = moves.map(move => move.to);
-        setHighlightedSquares(legalMoves);
-        setSelectedSquare(square);
-      }
-    } else {
-      const moves = game.moves({ square: selectedSquare, verbose: true });
-      if (moves.some(move => move.to === square)) {
-        const newMove = game.move({
-          from: selectedSquare,
-          to: square,
+    newSocket.on("moveMade", ({ fen, move, turn }) => {
+      console.log("Move received:", move);
+      updateGameState(fen, turn);
+      playMoveSound(move);
+      
+      if (move.captured) {
+        setCapturedPieces(prev => {
+          const capturingColor = move.color === 'w' ? 'w' : 'b';
+          return {
+            ...prev,
+            [capturingColor]: [...prev[capturingColor], move.captured]
+          };
         });
-
-        if (newMove) {
-          if (newMove.flags.includes('p')) {
-            setPromotionPiece({ from: selectedSquare, to: square });
-            setPromotionModalOpen(true);
-            return;
-          }
-
-          handleMove(newMove);
-        }
       }
-      setHighlightedSquares([]);
-      setSelectedSquare(null);
-    }
-  }, [selectedSquare, game, handleMove]);
+      
+      requestAnimationFrame(() => {
+        const newGame = new Chess(fen);
+        setGame(newGame);
+        setFen(fen);
+      });
+    });
 
-  const resetGame = useCallback(() => {
-    setGame(new Chess());
-    setFen("start");
-    setHighlightedSquares([]);
-    setSelectedSquare(null);
-    setCapturedPieces({ w: [], b: [] });
-    setTimerWhite(600);
-    setTimerBlack(600);
-    setTurn("w");
+    newSocket.on("joinError", (error) => {
+      alert(`Error joining game: ${error}`);
+      setStatus("Error joining game");
+    });
+
+    newSocket.on("playerLeft", ({ message }) => {
+      setStatus(`Game ended - ${message}`);
+      stopTimer();
+    });
+
+    newSocket.on("gameOver", ({ fen, result }) => {
+      updateGameState(fen);
+      setStatus(`Game over - ${result}`);
+      stopTimer();
+    });
+
+    newSocket.on("moveError", (error) => {
+      alert(`Move error: ${error}`);
+    });
+
+    return () => {
+      newSocket.close();
+      stopTimer();
+    };
   }, []);
 
+  const updateGameState = (newFen, newTurn) => {
+    const newGame = new Chess(newFen);
+    setGame(newGame);
+    setFen(newFen);
+    if (newTurn) setTurn(newTurn);
+  };
+
+  const createGame = useCallback(() => {
+    if (socket) {
+      socket.emit("createGame");
+    }
+  }, [socket]);
+
+  const joinGame = useCallback(() => {
+    if (socket && joinCode) {
+      socket.emit("joinGame", joinCode.toUpperCase());
+      setShowJoinDialog(false);
+    }
+  }, [socket, joinCode]);
+
+  const handleMove = useCallback(
+    (move) => {
+      if (socket && gameCode) {
+        socket.emit("makeMove", { gameCode, move });
+      }
+    },
+    [socket, gameCode]
+  );
+
+  const handleDrop = useCallback(
+    ({ sourceSquare, targetSquare }) => {
+      if (playerColor !== turn) {
+        console.log("Not your turn");
+        return false;
+      }
+
+      const moves = game.moves({
+        square: sourceSquare,
+        verbose: true
+      });
+
+      const move = moves.find(m => m.to === targetSquare);
+      if (!move) return false;
+
+      if (move.flags.includes('p')) {
+        setPendingMove({ from: sourceSquare, to: targetSquare });
+        setShowPromotionModal(true);
+        return true;
+      }
+
+      handleMove({ from: sourceSquare, to: targetSquare });
+      return true;
+    },
+    [game, handleMove, playerColor, turn]
+  );
+
+  const handlePromotion = (pieceType) => {
+    if (pendingMove) {
+      handleMove({ ...pendingMove, promotion: pieceType });
+      setShowPromotionModal(false);
+      setPendingMove(null);
+    }
+  };
+
+  const startTimer = () => {
+    if (timerRef.current) return;
+    timerRef.current = setInterval(() => {
+      if (turn === 'w') {
+        setWhiteTime(prev => Math.max(0, prev - 1));
+      } else {
+        setBlackTime(prev => Math.max(0, prev - 1));
+      }
+    }, 1000);
+  };
+
+  const stopTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
   return (
-    <div className="chessboard-wrapper">
-      <UserTile 
-        name="Opponent" 
-        timeLeft={timerBlack} 
-        capturedPieces={capturedPieces.b} // Corrected: captured by black shown on white side
-        side="black" 
-      />
-      <div className="chessboard-container">
+    <div className="chess-game-container">
+      <div className="status-bar">
+        <div className="game-status">{status}</div>
+        {gameCode && <div className="game-code">Game Code: {gameCode}</div>}
+      </div>
+      
+      <div className="game-layout">
+        <UserTile
+          name={playerColor === 'b' ? "You" : opponentName}
+          timeLeft={playerColor === 'b' ? blackTime : whiteTime}
+          capturedPieces={capturedPieces[playerColor === 'b' ? 'w' : 'b']}
+          side="top"
+        />
         <Chessboard
           position={fen}
           onDrop={handleDrop}
-          onSquareClick={handleSquareClick}
-          draggable={true}
-          width={550}
-          squareStyles={{
-            ...(highlightedSquares.reduce((acc, square) => {
-              acc[square] = { backgroundColor: 'yellow' };
-              return acc;
-            }, {})),
+          orientation={playerColor === 'b' ? 'black' : 'white'}
+          boardStyle={{
+            borderRadius: "5px",
+            boxShadow: `0 5px 15px rgba(0, 0, 0, 0.5)`
           }}
         />
-        <button onClick={resetGame} style={{ marginTop: "10px" }}>
-          Reset Game
-        </button>
+        <UserTile
+          name={playerColor === 'w' ? "You" : opponentName}
+          timeLeft={playerColor === 'w' ? whiteTime : blackTime}
+          capturedPieces={capturedPieces[playerColor === 'w' ? 'b' : 'w']}
+          side="bottom"
+        />
       </div>
-      <UserTile 
-        name="Guest9330695513" 
-        timeLeft={timerWhite} 
-        capturedPieces={capturedPieces.w} // Corrected: captured by white shown on black side
-        side="white" 
-      />
-      {isPromotionModalOpen && (
-        <PromotionModal onClose={() => setPromotionModalOpen(false)} onPromote={handlePromotion} />
+      
+      <div className="game-controls">
+        {!gameCode && (
+          <>
+            <button onClick={createGame} className="control-button">
+              Create New Game
+            </button>
+            <button onClick={() => setShowJoinDialog(true)} className="control-button">
+              Join Game
+            </button>
+          </>
+        )}
+      </div>
+
+      {showJoinDialog && (
+        <div className="join-dialog">
+          <input
+            type="text"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+            placeholder="Enter game code"
+            maxLength={6}
+          />
+          <button onClick={joinGame}>Join</button>
+          <button onClick={() => setShowJoinDialog(false)}>Cancel</button>
+        </div>
+      )}
+
+      {showPromotionModal && (
+        <PromotionModal
+          onSelectPiece={handlePromotion}
+          color={playerColor}
+        />
       )}
     </div>
   );
