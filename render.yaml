@@ -3,7 +3,7 @@ services:
     name: backend
     env: node
     buildCommand: "cd chess-online && npm install"
-    startCommand: "cd chess-online && node server.js"
+    startCommand: "npm start"
 
   - type: static
     name: frontend
