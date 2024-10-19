@@ -1,17 +1,18 @@
 services:
-  - type: web
-    name: backend
-    env: node
-    buildCommand: "cd chess-online && npm install"
-    startCommand: "cd chess-online && node server.js"
-    rootDir: chess-online
+  - type: static
+    name: chess-frontend
+    buildCommand: cd Chess && npm install && npm run build
+    publishDir: Chess/dist
+    envVars:
+      - key: NODE_ENV
+        value: production
 
+services:
   - type: web
-    name: frontend
+    name: chess-backend
     env: node
-    buildCommand: "cd Chess && npm install && npm run build"
-    startCommand: "cd Chess && npm run preview"
-    rootDir: Chess
+    buildCommand: cd chess-online && npm install
+    startCommand: node chess-online/server.js
     envVars:
       - key: NODE_ENV
         value: production
