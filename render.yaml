@@ -4,9 +4,11 @@ services:
     env: node
     buildCommand: "cd chess-online && npm install"
     startCommand: "cd chess-online && npm start"
-   
+    rootDir: chess-online
+
   - type: web
     name: frontend
     env: node
     buildCommand: "cd Chess && npm install && npm run build"
-    startCommand: "cd Chess && npm run start"
+    startCommand: "cd Chess && npm run preview"
+    rootDir: Chess
