@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: backend
+    env: node
+    buildCommand: "cd chess-online && npm install"
+    startCommand: "cd chess-online && node server.js"
+
+  - type: static
+    name: frontend
+    buildCommand: "cd Chess && npm install && npm run build"
+    publishDir: "Chess/build"
