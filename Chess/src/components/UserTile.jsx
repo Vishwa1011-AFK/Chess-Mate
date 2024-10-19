@@ -1,5 +1,4 @@
 import React from "react";
-import CapturedPieces from "./CapturedPieces";
 import "./UserTile.css";
 
 const formatTime = (timeInSeconds) => {
@@ -10,18 +9,17 @@ const formatTime = (timeInSeconds) => {
     .padStart(2, "0")}`;
 };
 
-const UserTile = ({ name, timeLeft, capturedPieces, side }) => {
+const UserTile = ({ name, timeLeft, capturedPieces, side, color }) => {
   return (
     <div className={`user-tile ${side}`}>
       <div className="user-info">
-        <div className="user-name">{name}</div>
-        <div className="user-timer">{formatTime(timeLeft)}</div>
+        <span className="user-name">{name}</span>
+        <span className="user-color">({color})</span>
       </div>
-      <div className="user-captured">
-        <CapturedPieces capturedPieces={capturedPieces} side={side} />
-      </div>
+      <div className="user-timer">{formatTime(timeLeft)}</div>
     </div>
   );
 };
+
 
 export default UserTile;
