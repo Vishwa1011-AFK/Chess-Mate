@@ -7,5 +7,5 @@ services:
 
   - type: static
     name: frontend
-    buildCommand: "cd Chess && npm install && npm run build"
+    buildCommand: "cd Chess && npm install && npm run dev"
     publishDir: "Chess/build"
