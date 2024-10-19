@@ -3,9 +3,12 @@ services:
     name: backend
     env: node
     buildCommand: "cd chess-online && npm install"
-    startCommand: "npm start"
+    startCommand: "cd chess-online && npm start"
+    rootDir: chess-online
 
-  - type: static
+  - type: web
     name: frontend
-    buildCommand: "cd Chess && npm install && npm run dev"
-    publishDir: "Chess/build"
+    env: node
+    buildCommand: "cd Chess && npm install && npm run build"
+    startCommand: "cd Chess && npm run preview"
+    rootDir: Chess

@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import ChessBoardComponent from './components/ChessBoard'; 
-import RandomVsRandom from './components/LoadingRandomPage';
-import './assets/images/logo.svg'
+import LoadingRandomPage from './components/LoadingRandomPage';
 import './App.css';
 
 function App() {
@@ -20,7 +19,7 @@ function App() {
           <ChessBoardComponent />
         ) : (
           <div className="chessboard-wrapper">
-            <RandomVsRandom />
+            <LoadingRandomPage />
             <button className="lets-play-button" onClick={handlePlayButtonClick}>
               Let's Play!
             </button>

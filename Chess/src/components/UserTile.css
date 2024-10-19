@@ -35,25 +35,3 @@
   font-family: monospace;
 }
 
-/* Ensure the user-captured wrapper works properly */
-.user-captured {
-  display: flex; /* Ensure captured pieces are displayed in a row */
-  flex-wrap: nowrap; /* Prevent wrapping */
-  gap: 5px; /* Space between pieces */
-  max-width: 60%; /* Adjust as needed */
-  justify-content: flex-end; /* Align to the end */
-}
-
-.captured-pieces {
-  display: flex; /* Display in a horizontal row */
-  flex-direction: row;
-  gap: 5px; /* Space between pieces */
-  justify-content: flex-start; /* Align pieces to the left (or change to flex-end for right alignment) */
-  max-width: 100%; /* Full width */
-}
-
-
-.captured-piece {
-  width: 30px; /* Set a fixed width for each piece */
-  height: 30px; /* Set a fixed height for each piece */
-}
