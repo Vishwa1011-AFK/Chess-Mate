@@ -1,19 +1,17 @@
-{
-  "name": "chess-online",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "chess.js": "^1.0.0-beta.8",
-    "cors": "^2.8.5",
-    "express": "^4.21.0",
-    "socket.io": "^4.8.0"
-  }
-}
+services:
+  - type: web
+    name: backend
+    env: node
+    buildCommand: "cd chess-online && npm install"
+    startCommand: "cd chess-online && node server.js"
+    rootDir: chess-online
+
+  - type: web
+    name: frontend
+    env: node
+    buildCommand: "cd Chess && npm install && npm run build"
+    startCommand: "cd Chess && npm run preview"
+    rootDir: Chess
+    envVars:
+      - key: NODE_ENV
+        value: production
