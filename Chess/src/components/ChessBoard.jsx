@@ -7,7 +7,7 @@ import PromotionModal from "./PromotionModal";
 import soundManager, { playMoveSound } from "../utils/SoundManager";
 import './ChessBoard.css';
 
-const SOCKET_SERVER_URL = "http://localhost:3001";
+const SOCKET_SERVER_URL = "https://chess-mate-backend-3fq5.onrender.com/";
 
 const gameTypes = [
   { name: "Blitz", time: 3 },
