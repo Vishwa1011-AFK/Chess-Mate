@@ -1,0 +1,92 @@
+/* Base styles */
+body {
+    font-size: 16px;
+  }
+  
+  .chess-game-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* Small devices (phones, 600px and down) */
+  @media only screen and (max-width: 600px) {
+    body {
+      font-size: 14px;
+    }
+  
+    .chess-game-container {
+      padding: 10px;
+    }
+  
+    .status-bar {
+      max-width: 100%;
+    }
+  
+    .game-controls {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-left: 0;
+      margin-top: 20px;
+    }
+  
+    .control-button {
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+  
+    .user-tile {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .user-captured {
+      max-width: 100%;
+      justify-content: flex-start;
+      margin-top: 10px;
+    }
+  }
+  
+  /* Medium devices (tablets, 768px and up) */
+  @media only screen and (min-width: 601px) and (max-width: 768px) {
+    .chess-game-container {
+      flex-direction: column;
+    }
+  
+    .game-controls {
+      flex-direction: row;
+      justify-content: center;
+      margin-left: 0;
+      margin-top: 20px;
+    }
+  }
+  
+  /* Large devices (desktops, 992px and up) */
+  @media only screen and (min-width: 992px) {
+    .chess-game-container {
+      flex-direction: row;
+    }
+  }
+  
+  /* Adjustments for the chessboard */
+  @media only screen and (max-width: 768px) {
+    .chessboard-container {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+  }
+  
+  /* Ensure the promotion modal is responsive */
+  @media only screen and (max-width: 600px) {
+    .promotion-modal {
+      width: 90%;
+      max-width: 300px;
+    }
+  
+    .promotion-piece {
+      font-size: 30px;
+      width: 50px;
+      height: 50px;
+    }
+  }

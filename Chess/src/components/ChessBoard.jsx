@@ -29,15 +29,18 @@ const ChessBoardComponent = () => {
   const [joinCode, setJoinCode] = useState("");
   const [capturedPieces, setCapturedPieces] = useState({ w: [], b: [] });
   const [showPromotionModal, setShowPromotionModal] = useState(false);
-  const [pendingMove, setPendingMove] = useState(null);
+  const [pendingPromotion, setPendingPromotion] = useState(null);
   const [lastServerUpdate, setLastServerUpdate] = useState(Date.now());
   const [playerName, setPlayerName] = useState("You");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedGameType, setSelectedGameType] = useState(gameTypes[0]);
   const [selectedColor, setSelectedColor] = useState("random");
-  const timerRef = useRef(null);
   const [timeLeft, setTimeLeft] = useState({ white: 0, black: 0 });
   const timerInterval = useRef(null);
+
+  // New state for piece selection and possible moves
+  const [selectedPiece, setSelectedPiece] = useState(null);
+  const [possibleMoves, setPossibleMoves] = useState([]);
 
   useEffect(() => {
     const newSocket = io(SOCKET_SERVER_URL, {
@@ -98,6 +101,10 @@ const ChessBoardComponent = () => {
       setCurrentTurn(turn);
       setTimeLeft(timeLeft);
       setLastServerUpdate(Date.now());
+      
+      // Reset selection and possible moves after a move is made
+      setSelectedPiece(null);
+      setPossibleMoves([]);
     });
 
     newSocket.on("timeUpdate", (updatedTimeLeft) => {
@@ -181,22 +188,21 @@ const ChessBoardComponent = () => {
 
   const handleMove = useCallback(
     (move) => {
-      if (socket && gameCode && currentTurn === playerColor) { // Check if it's the player's turn
+      if (socket && gameCode && currentTurn === playerColor) {
         socket.emit("makeMove", { gameCode, move });
   
         // Optimistically update the game state
         const newGame = new Chess(game.fen());
         const result = newGame.move(move);
         if (result) {
-          // Check if a piece was captured
           if (result.captured) {
             setCapturedPieces(prev => {
-              const capturingColor = playerColor; // Use the player's color
+              const capturingColor = playerColor;
               const opponentColor = capturingColor === 'w' ? 'b' : 'w';
               return {
                 ...prev,
-                [capturingColor]: [...prev[capturingColor], result.captured], // Add captured piece to capturing player
-                [opponentColor]: prev[opponentColor], // Ensure opponent's captured pieces remain unchanged
+                [capturingColor]: [...prev[capturingColor], result.captured],
+                [opponentColor]: prev[opponentColor],
               };
             });
           }
@@ -204,6 +210,10 @@ const ChessBoardComponent = () => {
           setGame(newGame);
           setFen(newGame.fen());
           setCurrentTurn(newGame.turn());
+          
+          // Reset selection and possible moves after a move is made
+          setSelectedPiece(null);
+          setPossibleMoves([]);
         }
       } else {
         console.log("Not your turn");
@@ -211,76 +221,137 @@ const ChessBoardComponent = () => {
     },
     [socket, gameCode, game, currentTurn, playerColor]
   );
-  
-  
+
+  const highlightSquare = useCallback((square) => {
+    return {
+      backgroundColor: "rgba(255, 255, 0, 0.4)",
+    };
+  }, []);
+
+  const onSquareClick = useCallback((square) => {
+    if (currentTurn !== playerColor) {
+      console.log("Not your turn");
+      return;
+    }
+
+    if (selectedPiece) {
+      // If a piece is already selected, try to move it
+      const move = {
+        from: selectedPiece,
+        to: square,
+        promotion: 'q', // always promote to queen for simplicity
+      };
+
+      const moveResult = game.move(move);
+      if (moveResult) {
+        // Valid move
+        handleMove(move);
+        setSelectedPiece(null);
+        setPossibleMoves([]);
+      } else {
+        // Invalid move, check if it's a new piece selection
+        const piece = game.get(square);
+        if (piece && piece.color === playerColor[0]) {
+          setSelectedPiece(square);
+          const moves = game.moves({ square: square, verbose: true });
+          setPossibleMoves(moves.map(move => move.to));
+        } else {
+          setSelectedPiece(null);
+          setPossibleMoves([]);
+        }
+      }
+    } else {
+      // No piece selected, try to select one
+      const piece = game.get(square);
+      if (piece && piece.color === playerColor[0]) {
+        setSelectedPiece(square);
+        const moves = game.moves({ square: square, verbose: true });
+        setPossibleMoves(moves.map(move => move.to));
+      }
+    }
+  }, [game, selectedPiece, handleMove, currentTurn, playerColor]);
+
   const handleDrop = useCallback(
     ({ sourceSquare, targetSquare }) => {
-      // Allow the first move for white, even if playerColor is not set yet
-      if (currentTurn !== playerColor && (playerColor !== currentTurn || !playerColor)) {
+      if (currentTurn !== playerColor) {
         console.log("Not your turn");
         return false;
       }
-  
+
       const moves = game.moves({
         square: sourceSquare,
         verbose: true
       });
-  
+
       const move = moves.find(m => m.to === targetSquare);
       if (!move) return false;
-  
+
       if (move.flags.includes('p')) {
-        setPendingMove({ from: sourceSquare, to: targetSquare });
+        setPendingPromotion({ from: sourceSquare, to: targetSquare });
         setShowPromotionModal(true);
         return true;
       }
-  
+
       handleMove({ from: sourceSquare, to: targetSquare });
       return true;
     },
     [game, handleMove, playerColor, currentTurn]
   );
-  
 
-  const handlePromotion = (pieceType) => {
-    if (pendingMove) {
-      handleMove({ ...pendingMove, promotion: pieceType });
+  const handlePromotion = useCallback((pieceType) => {
+    if (pendingPromotion) {
+      handleMove({ ...pendingPromotion, promotion: pieceType });
       setShowPromotionModal(false);
-      setPendingMove(null);
+      setPendingPromotion(null);
     }
-  };
+  }, [pendingPromotion, handleMove]);
 
   return (
     <div className="chess-game-container">
-    <div className="status-bar">
-      <div className="game-status">{status}</div>
-      {gameCode && <div className="game-code">Game Code: {gameCode}</div>}
-    </div>
-    
-    <div className="game-layout">
-      <UserTile
-        name={playerColor === 'w' ? opponentName : playerName}
-        capturedPieces={capturedPieces[playerColor === 'w' ? 'b' : 'w']}
-        side="top"
-        color={playerColor === 'w' ? 'Black' : 'White'}
-        timeLeft={timeLeft[playerColor === 'w' ? 'black' : 'white']}
-      />
-      <Chessboard
-        position={fen}
-        onDrop={handleDrop}
-        orientation={playerColor === 'b' ? 'black' : 'white'}
-        draggable={true}
-        width={500}
-      />
-      <UserTile
-        name={playerColor === 'w' ? playerName : opponentName}
-        capturedPieces={capturedPieces[playerColor === 'w' ? 'w' : 'b']}
-        side="bottom"
-        color={playerColor === 'w' ? 'White' : 'Black'}
-        timeLeft={timeLeft[playerColor === 'w' ? 'white' : 'black']}
+      <div className="status-bar">
+        <div className="game-status">{status}</div>
+        {gameCode && <div className="game-code">Game Code: {gameCode}</div>}
+      </div>
+      
+      <div className="game-layout">
+        <UserTile
+          name={playerColor === 'w' ? opponentName : playerName}
+          capturedPieces={capturedPieces[playerColor === 'w' ? 'b' : 'w']}
+          side="top"
+          color={playerColor === 'w' ? 'Black' : 'White'}
+          timeLeft={timeLeft[playerColor === 'w' ? 'black' : 'white']}
         />
-    </div>
+        <Chessboard
+          position={fen}
+          onDrop={handleDrop}
+          orientation={playerColor === 'b' ? 'black' : 'white'}
+          draggable={true}
+          width={500}
+          onSquareClick={onSquareClick}
+          squareStyles={
+            possibleMoves.reduce((styles, square) => {
+              styles[square] = highlightSquare(square);
+              return styles;
+            }, {})
+          }
+        />
+        <UserTile
+          name={playerColor === 'w' ? playerName : opponentName}
+          capturedPieces={capturedPieces[playerColor === 'w' ? 'w' : 'b']}
+          side="bottom"
+          color={playerColor === 'w' ? 'White' : 'Black'}
+          timeLeft={timeLeft[playerColor === 'w' ? 'white' : 'black']}
+        />
+      </div>
 
+      {showPromotionModal && (
+        <PromotionModal
+          onClose={() => setShowPromotionModal(false)}
+          onPromotion={handlePromotion}
+          color={playerColor}
+        />
+      )}
+      
       {!gameCode && (
         <div className="game-setup">
           <div className="game-controls">
