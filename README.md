@@ -3,7 +3,7 @@
 A modern React-based chess application featuring real-time multiplayer gameplay, customizable time controls, and an intuitive user interface.
 
 ## Backend Repository
-The backend for this application can be found at [ChessMate Backend Repository]([https://github.com/yourusername/chess-mate-backend](https://github.com/Vishwa1011IIITM/Chess-Mate_Backend.git))
+The backend for this application can be found at [ChessMate Backend Repository](https://github.com/yourusername/chess-mate-backend](https://github.com/Vishwa1011IIITM/Chess-Mate_Backend.git)
 
 ## Features
 
