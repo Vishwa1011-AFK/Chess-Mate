@@ -46,6 +46,40 @@ const ChessBoardComponent = () => {
   const [possibleMoves, setPossibleMoves] = useState([])
   const [statusClass, setStatusClass] = useState("")
 
+  const [boardWidth, setBoardWidth] = useState(400) // For dynamic board size
+  const boardContainerRef = useRef(null) // Ref for the board container
+
+  // Calculate board size based on container dimensions
+  useEffect(() => {
+    const updateBoardSize = () => {
+      if (boardContainerRef.current) {
+        const containerWidth = boardContainerRef.current.clientWidth
+        const containerHeight = boardContainerRef.current.clientHeight
+        // Calculate the maximum possible size while maintaining aspect ratio
+        const size = Math.min(containerHeight, containerWidth)
+        // Set a size that fits within the container, e.g., 95%
+        setBoardWidth(Math.floor(size * 0.95))
+      }
+    }
+
+    updateBoardSize() // Initial call
+
+    // Add resize listener
+    const resizeObserver = new ResizeObserver(updateBoardSize)
+    if (boardContainerRef.current) {
+      resizeObserver.observe(boardContainerRef.current)
+    }
+    window.addEventListener("resize", updateBoardSize)
+
+    return () => {
+      window.removeEventListener("resize", updateBoardSize)
+      if (boardContainerRef.current) {
+        resizeObserver.unobserve(boardContainerRef.current);
+      }
+      resizeObserver.disconnect()
+    }
+  }, [isGameActive]) // Re-calculate if game active state changes or on initial load
+
   useEffect(() => {
     console.log("Attempting to connect to server:", SOCKET_SERVER_URL)
     const newSocket = io(SOCKET_SERVER_URL, {
@@ -554,68 +588,81 @@ const ChessBoardComponent = () => {
     <div className="chess-game-container">
       <div className="status-bar">
         <div className={`game-status ${statusClass}`}>{status}</div>
-        {gameCode && (
-          <div className="game-code-container">
-            <div className="game-code">
-              Game Code: <strong>{gameCode}</strong>
+        <div className="game-info-and-players">
+          {gameCode && (
+            <div className="game-code-container">
+              <div className="game-code">
+                Game Code: <strong>{gameCode}</strong>
+              </div>
+              <button className="copy-button" onClick={copyGameCode} title="Copy game code">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </button>
+              <div className={`copy-tooltip ${showCopyTooltip ? "visible" : ""}`}>Copied!</div>
             </div>
-            <button className="copy-button" onClick={copyGameCode} title="Copy game code">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-            </button>
-            <div className={`copy-tooltip ${showCopyTooltip ? "visible" : ""}`}>Copied!</div>
+          )}
+          <div className="user-tiles-area">
+            <UserTile
+              name={playerColor === "w" ? opponentName : playerName}
+              capturedPieces={capturedPieces[playerColor === "w" ? "b" : "w"] || []}
+              color={playerColor === "w" ? "Black" : "White"}
+              timeLeft={timeLeft[playerColor === "w" ? "black" : "white"]}
+              isActive={currentTurn === (playerColor === "w" ? "b" : "w") && isGameActive}
+            />
+            <UserTile
+              name={playerColor === "w" ? playerName : opponentName}
+              capturedPieces={capturedPieces[playerColor === "w" ? "w" : "b"] || []}
+              color={playerColor === "w" ? "White" : "Black"}
+              timeLeft={timeLeft[playerColor === "w" ? "white" : "black"]}
+              isActive={currentTurn === playerColor && isGameActive}
+            />
           </div>
-        )}
+        </div>
       </div>
 
       <div className="game-layout">
-        <UserTile
-          name={playerColor === "w" ? opponentName : playerName}
-          capturedPieces={capturedPieces[playerColor === "w" ? "b" : "w"] || []}
-          side="top"
-          color={playerColor === "w" ? "Black" : "White"}
-          timeLeft={timeLeft[playerColor === "w" ? "black" : "white"]}
-        />
-
-        <div className="chessboard-container">
-          <Chessboard
-            id="ChessBoard"
-            position={fen}
-            onDrop={handleDrop}
-            orientation={playerColor === "b" ? "black" : "white"}
-            draggable={!boardDisabled}
-            width={Math.min(500, window.innerWidth > 600 ? 500 : window.innerWidth - 40)}
-            onSquareClick={onSquareClick}
-            squareStyles={highlightSquareStyles()}
-            boardStyle={{
-              borderRadius: "10px",
-              boxShadow: `0 10px 25px rgba(0, 0, 0, 0.2)`,
-            }}
-            lightSquareStyle={{ backgroundColor: "#F0D9B5" }}
-            darkSquareStyle={{ backgroundColor: "#B58863" }}
-            dropSquareStyle={{ boxShadow: "inset 0 0 1px 4px rgba(243, 156, 18, 0.5)" }}
-          />
+        <div className="chessboard-container" ref={boardContainerRef}>
+          {(!isGameActive && !gameCode) ? (
+             <div className="empty-state-controls"> {/* Wrapper for empty state buttons */}
+              <button onClick={() => setShowCreateDialog(true)} className="control-button">
+                Create New Game
+              </button>
+              <button onClick={() => setShowJoinDialog(true)} className="control-button">
+                Join Game
+              </button>
+            </div>
+          ) : (
+            <Chessboard
+              id="ChessBoard"
+              position={fen}
+              onDrop={handleDrop}
+              orientation={playerColor === "b" ? "black" : "white"}
+              draggable={!boardDisabled}
+              width={boardWidth} // Use dynamic board width
+              onSquareClick={onSquareClick}
+              squareStyles={highlightSquareStyles()}
+              boardStyle={{
+                borderRadius: "10px",
+                boxShadow: `0 10px 25px rgba(0, 0, 0, 0.2)`,
+              }}
+              lightSquareStyle={{ backgroundColor: "#F0D9B5" }}
+              darkSquareStyle={{ backgroundColor: "#B58863" }}
+              dropSquareStyle={{ boxShadow: "inset 0 0 1px 4px rgba(243, 156, 18, 0.5)" }}
+            />
+          )}
         </div>
-
-        <UserTile
-          name={playerColor === "w" ? playerName : opponentName}
-          capturedPieces={capturedPieces[playerColor === "w" ? "w" : "b"] || []}
-          side="bottom"
-          color={playerColor === "w" ? "White" : "Black"}
-          timeLeft={timeLeft[playerColor === "w" ? "white" : "black"]}
-        />
       </div>
 
       {showPromotionModal && (
@@ -632,16 +679,9 @@ const ChessBoardComponent = () => {
         />
       )}
 
-      {!gameCode && !isGameActive && (
-        <div className="game-controls">
-          <button onClick={() => setShowCreateDialog(true)} className="control-button">
-            Create New Game
-          </button>
-          <button onClick={() => setShowJoinDialog(true)} className="control-button">
-            Join Game
-          </button>
-        </div>
-      )}
+      {/* Conditional rendering for Create/Join buttons moved to empty state of chessboard container */}
+      {/* The old game-controls div can be removed if its content is now in empty-state-controls */}
+
 
       {showJoinDialog && (
         <div className="join-dialog">
