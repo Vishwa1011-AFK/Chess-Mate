@@ -4,44 +4,117 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(5px);
 }
 
 .promotion-modal {
   background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  animation: modalFadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-width: 450px;
+  width: 90%;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.promotion-modal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #8b5a2b, #a67c52);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .promotion-content h2 {
   margin-top: 0;
   text-align: center;
+  color: #2c3e50;
+  font-size: 1.8rem;
+  margin-bottom: 25px;
+  font-family: "Playfair Display", serif;
+  position: relative;
+}
+
+.promotion-content h2::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #8b5a2b, transparent);
 }
 
 .promotion-options {
   display: flex;
   justify-content: space-around;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .promotion-piece {
-  font-size: 40px;
-  width: 60px;
-  height: 60px;
+  font-size: 2.5rem;
+  width: 80px;
+  height: 80px;
   border: none;
-  background-color: #f0f0f0;
+  background-color: #f8f9fa;
   cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.promotion-piece::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .promotion-piece:hover {
-  background-color: #e0e0e0;
+  transform: translateY(-8px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+.promotion-piece:hover::before {
+  opacity: 1;
+}
+
+.promotion-piece:active {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .promotion-piece.w {
@@ -52,4 +125,50 @@
 .promotion-piece.b {
   color: #000;
   background-color: #f0d9b5;
+}
+
+/* Add piece-specific animations */
+@keyframes queenGlow {
+  0% {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 6px 12px rgba(230, 126, 34, 0.4);
+  }
+  100% {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.promotion-piece:nth-child(1) {
+  animation: queenGlow 2s infinite;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+  .promotion-modal {
+    padding: 25px 20px;
+  }
+
+  .promotion-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .promotion-piece {
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 400px) {
+  .promotion-modal {
+    padding: 20px 15px;
+  }
+
+  .promotion-piece {
+    font-size: 1.8rem;
+    width: 50px;
+    height: 50px;
+  }
 }

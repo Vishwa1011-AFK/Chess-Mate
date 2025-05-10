@@ -1,21 +1,99 @@
+/* Main App Styling */
+:root {
+  --primary-color: #8b5a2b;
+  --primary-light: #a67c52;
+  --primary-dark: #704626;
+  --secondary-color: #2c3e50;
+  --secondary-light: #34495e;
+  --secondary-dark: #1a2530;
+  --accent-color: #e67e22;
+  --accent-light: #f39c12;
+  --accent-dark: #d35400;
+  --light-square: #f0d9b5;
+  --dark-square: #b58863;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --text-light: #ecf0f1;
+  --background-main: #ecf0f1;
+  --background-card: #ffffff;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.2);
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* App container */
+.App {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(135deg, #ecf0f1 0%, #d6dbdf 100%);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.App::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  z-index: 0;
+}
+
 /* Center the h1 */
 h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 3.5rem;
   margin-top: 20px;
+  color: var(--primary-dark);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
-/* Center the entire chessboard wrapper vertically and horizontally */
+h1::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+}
+
+/* Center the entire chessboard wrapper */
 .chessboard-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  flex-direction: column; /* Align everything in a column */
-  background-color: #f0f0f0; /* Add a background color for better contrast */
-  padding: 20px; /* Add some padding around the content */
+  height: 100%;
+  flex-direction: column;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
 }
 
 /* Center and align the chessboard with additional components */
@@ -24,24 +102,62 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 0 20px; /* Space between the chessboard and any other elements */
+  margin: 0 20px;
+  box-shadow: var(--shadow-xl);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  background-color: var(--background-card);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.chessboard-container:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl), 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 /* Style the button */
 .lets-play-button {
   margin-top: 30px;
-  padding: 12px 24px;
-  font-size: 18px;
+  padding: 16px 32px;
+  font-size: 1.25rem;
   cursor: pointer;
-  background-color: #007bff;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
   border: none;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
+  border-radius: 50px;
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-md), 0 6px 0 var(--primary-dark);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+
+.lets-play-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.7s ease;
 }
 
 .lets-play-button:hover {
-  background-color: #0056b3;
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg), 0 8px 0 var(--primary-dark);
+}
+
+.lets-play-button:hover::before {
+  left: 100%;
+}
+
+.lets-play-button:active {
+  transform: translateY(4px);
+  box-shadow: var(--shadow-sm), 0 2px 0 var(--primary-dark);
 }
 
 /* Adjustments for the Random vs Random section */
@@ -50,11 +166,15 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 h2 {
-  font-size: 24px;
+  font-size: 2rem;
   margin-bottom: 20px;
+  color: var(--secondary-color);
+  text-align: center;
 }
 
 /* Adjust the layout of the actual chessboard and the captured pieces */
@@ -64,4 +184,37 @@ h2 {
   justify-content: center;
   align-items: center;
   margin-top: 20px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  .lets-play-button {
+    padding: 14px 28px;
+    font-size: 1rem;
+  }
+
+  .chessboard-wrapper {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  .lets-play-button {
+    padding: 12px 24px;
+    font-size: 0.9rem;
+  }
+
+  .chessboard-wrapper {
+    padding: 5px;
+  }
 }
